@@ -1,6 +1,5 @@
 package com.equipofutbol.equipofutbol_adso.exception;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,19 +12,30 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.equipofutbol.equipofutbol_adso.dto.MessageResponseDTO;
 
+/**
+ * Manejador global de excepciones para toda la aplicación.
+ * Se anota con @RestControllerAdvice, que combina @ControllerAdvice y
+ * @ResponseBody, permitiendo que esta clase intercepte las excepciones lanzadas
+ * por cualquier controlador y retorne respuestas JSON estructuradas en lugar de
+ * páginas de error. Centraliza el manejo de tres tipos de errores: validación
+ * de campos (400), excepciones de negocio (400) y errores de autorización (403).
+ * Esto asegura que la API siempre responda con formato JSON consistente y códigos
+ * HTTP apropiados, sin necesidad de try-catch en cada controlador.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Maneja los errores de validación de campos en el cuerpo de las solicitudes
-     * (fieldName y errorMessage)
-     * Se activa cuando un DTO no cumple las restricciones definidas con anotaciones
-     * de validación.
+     * Maneja los errores de validación que ocurren cuando un DTO anotado con @Valid
+     * no cumple las restricciones de Jakarta Validation (@NotBlank, @NotNull, etc.).
+     * Se activa automáticamente cuando Spring lanza MethodArgumentNotValidException
+     * al fallar la validación del cuerpo de la petición. Recorre todos los errores
+     * de campo y construye un mapa donde cada clave es el nombre del campo inválido
+     * y cada valor es el mensaje de error definido en la anotación. Retorna el mapa
+     * con estado HTTP 400 (BAD_REQUEST).
      * 
-     * @param ex excepción con los detalles de los campos que fallaron en la
-     *           validación
-     * @return mapa con el nombre de cada campo inválido y su mensaje de error con
-     *         estado 400
+     * @param ex Excepción con los detalles de los campos que fallaron en la validación.
+     * @return Mapa con nombre de campo y mensaje de error, con estado 400.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(
@@ -43,10 +53,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Maneja las excepciones de negocio que vienen de los service y controller
+     * Maneja las excepciones de negocio lanzadas desde los servicios y
+     * controladores (por ejemplo, "El nombre de usuario ya está registrado",
+     * "No se encontró un jugador con ese número de camiseta", etc.). Captura
+     * cualquier RuntimeException y retorna un MessageResponseDTO con el mensaje
+     * de la excepción y estado HTTP 400. Esto permite que la lógica de negocio
+     * lance excepciones con mensajes descriptivos que se muestran directamente
+     * al cliente sin necesidad de try-catch adicionales.
      * 
-     * @param ex excepcion con el mensaje del error
-     * @return mensaje de error con estado (400)
+     * @param ex Excepción con el mensaje del error.
+     * @return MessageResponseDTO con el mensaje de error, estado 400.
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<MessageResponseDTO> handleRuntimeException(RuntimeException ex) {
@@ -55,29 +71,19 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Maneja los errores sobre JWT, token expirado o invalido o malformado
+     * Maneja errores de autorización específicos cuando un usuario intenta acceder
+     * a recursos para los que no tiene permisos. Captura SecurityAuthorizationException
+     * y retorna un mensaje de error con estado HTTP 403 (FORBIDDEN). Este manejador
+     * está preparado para ser utilizado cuando se implemente la verificación de roles
+     * en los controladores o servicios.
      * 
-     * @param ex excepcion con el detalle del fallo en la validación del token
-     * @return mensaje de error con estado (401)
-     */
-    /* 
-    @ExceptionHandler(io.jsonwebtoken.JwtException.class)
-    public ResponseEntity<MessageResponseDTO> handleJwtException(io.jsonwebtoken.JwtException ex) {
-        MessageResponseDTO response = new MessageResponseDTO("Token inválido: " + ex.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-    }
-*/
-    /**
-     * Maneja errores de autorización (Roles no permitidos)
-     * 
-     * @param ex
-     * @return un estado 403 FORBIDDEN
+     * @param ex Excepción de seguridad con el detalle del error de autorización.
+     * @return MessageResponseDTO con el mensaje de error, estado 403.
      */
     @ExceptionHandler(SecurityAuthorizationException.class)
     public ResponseEntity<MessageResponseDTO> handleSecurityException(SecurityAuthorizationException ex) {
         MessageResponseDTO response = new MessageResponseDTO(ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
-
 }
 
