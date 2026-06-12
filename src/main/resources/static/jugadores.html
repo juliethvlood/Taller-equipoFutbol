@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Jugadores</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<h1>Registro de Jugadores</h1>
+
+<form id="formJugador">
+
+    <input
+        type="text"
+        id="nombre"
+        placeholder="Nombre"
+        required>
+
+    <input
+        type="text"
+        id="apellido"
+        placeholder="Apellido"
+        required>
+
+    <input
+        type="number"
+        id="edad"
+        placeholder="Edad"
+        required>
+
+    <button type="submit">
+        Guardar
+    </button>
+
+</form>
+
+<hr>
+
+<table>
+
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Edad</th>
+        </tr>
+    </thead>
+
+    <tbody id="tablaJugadores"></tbody>
+
+</table>
+
+<script src="js/jugadores.js"></script>
+
+</body>
+</html>
